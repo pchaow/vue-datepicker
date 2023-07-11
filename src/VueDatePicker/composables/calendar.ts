@@ -86,6 +86,16 @@ export const useCalendar = (
     // Calendar data per instance
     const calendars = ref<ICalendarData[]>([{ month: getMonth(getDate()), year: getYear(getDate()) }]);
 
+    watch(
+        calendars,
+        () => {
+            calendars.value.forEach((calendar, i) => {
+                emit('update-month-year', { instance: i, month: calendar.month, year: calendar.year });
+            });
+        },
+        { deep: true },
+    );
+
     // Time values
     const time = reactive({
         hours: props.range ? [getHours(getDate()), getHours(getDate())] : getHours(getDate()),
@@ -501,6 +511,16 @@ export const useCalendar = (
         );
     };
 
+    const validateRangeAfterTimeSet = () => {
+        if (tempRange.value[0] && tempRange.value[1]) {
+            if (+tempRange.value?.[0] > +tempRange.value?.[1]) {
+                tempRange.value.reverse();
+                emit('range-start', tempRange.value[0]);
+                emit('range-end', tempRange.value[1]);
+            }
+        }
+    };
+
     // After range date is select, ensure that proper times are set and assign to modelValue
     const postRangeSelect = () => {
         if (tempRange.value.length) {
@@ -511,6 +531,7 @@ export const useCalendar = (
                 assignTime(1);
                 updateFlow();
             }
+            validateRangeAfterTimeSet();
             modelValue.value = tempRange.value.slice();
 
             if (tempRange.value[0] && tempRange.value[1] && props.autoApply) {
@@ -619,7 +640,6 @@ export const useCalendar = (
                 }
             }
         }
-        emit('update-month-year', { instance, month: val.month, year: val.year });
         triggerCalendarTransition(props.multiCalendarsSolo ? instance : undefined);
     };
 
@@ -646,7 +666,6 @@ export const useCalendar = (
             if (defaults.value.multiCalendars && !props.multiCalendarsSolo) {
                 autoChangeMultiCalendars(instance);
             }
-            emit('update-month-year', { instance, month: getMonth(date), year: getYear(date) });
             triggerCalendarTransition();
         }
     };

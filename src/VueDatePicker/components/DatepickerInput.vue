@@ -39,10 +39,11 @@
                 @paste="handlePaste"
             />
             <div @click="emit('toggle')">
-                <span class="dp__input_icon" v-if="$slots['input-icon'] && !hideInputIcon"
+                <span class="dp__input_icon" @click="emit('toggle')" v-if="$slots['input-icon'] && !hideInputIcon"
                     ><slot name="input-icon"
                 /></span>
                 <CalendarIcon
+                    @click="emit('toggle')"
                     v-if="!$slots['input-icon'] && !hideInputIcon && !$slots['dp-input']"
                     class="dp__input_icon dp__input_icons"
                 />
@@ -165,8 +166,8 @@
         }
     };
 
-    const handleInput = (event: Event): void => {
-        const { value } = event.target as HTMLInputElement;
+    const handleInput = (event: Event | string): void => {
+        const value = typeof event === 'string' ? event : (event.target as HTMLInputElement)?.value;
 
         if (value !== '') {
             if (defaults.value.textInputOptions?.openMenu && !props.isMenuOpen) {
@@ -237,7 +238,7 @@
     const handleBlur = (): void => {
         emit('real-blur');
         isFocused.value = false;
-        if (!props.isMenuOpen) {
+        if (!props.isMenuOpen || (props.inline && props.inlineWithInput)) {
             emit('blur');
         }
         if (props.autoApply && props.textInput && parsedDate.value && !props.isMenuOpen) {
